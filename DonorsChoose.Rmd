@@ -1,0 +1,309 @@
+---
+title: 'Donate Again'
+author: "Nishant"
+output:
+  html_document:
+    number_sections: false
+    toc: true
+    toc_depth: 6
+    highlight: tango
+    theme: cosmo
+    smart: true
+    code_folding: hide
+    df_print: paged
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Introduction
+![](http://internet.savannah.chatham.k12.ga.us/schools/mes/PublishingImages/DonorsChoose_org_logo.jpg)
+
+DonorsChoose.org has funded over 1.1 million classroom requests through the support of 3 million donors, the majority of whom were making their first-ever donation to a public school. If DonorsChoose.org can motivate even a fraction of those donors to make another donation, that could have a huge impact on the number of classroom requests fulfilled.
+
+# Data Exploration
+
+### Loading Data And Libraries
+
+```{r , message=FALSE, warning=FALSE}
+
+library(dplyr)
+library(ggplot2)
+library(plotly)
+
+donations = read.csv("Donations.csv", stringsAsFactors = F)
+donors = read.csv("Donors.csv", stringsAsFactors = F)
+projects = read.csv("Projects.csv", stringsAsFactors = F)
+resources = read.csv("Resources.csv", stringsAsFactors = F)
+schools = read.csv("Schools.csv", stringsAsFactors = F)
+teachers = read.csv("Teachers.csv", stringsAsFactors = F)
+
+
+```
+
+### Glimpse of the data {.tabset .tabset-fade .tabset-pills}
+
+#### Donations
+
+```{r message=FALSE, warning=FALSE}
+
+glimpse(donations)
+
+```
+
+#### Donors
+
+```{r message=FALSE, warning=FALSE}
+
+glimpse(donors)
+
+```
+
+#### Projects
+
+```{r message=FALSE, warning=FALSE}
+
+glimpse(projects)
+
+```
+
+#### Resources
+
+```{r message=FALSE, warning=FALSE}
+
+glimpse(resources)
+
+```
+
+#### Schools
+
+```{r message=FALSE, warning=FALSE}
+
+glimpse(schools)
+
+```
+
+#### Teachers
+
+```{r message=FALSE, warning=FALSE}
+
+glimpse(teachers)
+
+```
+
+
+# Donations Data analysis
+
+Lets look into donations data and find out some trends.
+
+**Project.ID** - Unique identifier of a Project
+**Donation.ID** - Unique indentier of a donation
+**Donor.ID** - Unique indentier of a donor
+**Donation.Included.Optional.Donation** - Whether or not the donation included an optional donation
+**Donation.Amount** - The amount donated
+**Donor.Cart.Sequence ** - Donation sequence of donor
+
+
+Lets summarise our data grouping against Project Id showing donation amount and number of donations.
+```{r message=FALSE, warning=FALSE}
+
+summary_by_project = donations %>%
+  group_by(Project.ID) %>%
+  summarise(Donation_amount = sum(Donation.Amount, na.rm = T), Donation_No = n()) %>%
+  filter(Donation_amount >= 100.00)
+
+glimpse(summary_by_project)
+
+
+```
+
+*lets filter out data for donation amount greater than equal to 100$.*
+
+## Sumarising Donation Amount Data
+
+```{r message=FALSE, warning=FALSE}
+summary(summary_by_project$Donation_amount)
+```
+
+
+## Plotting laon amount Data for Last Quartile Range
+
+```{r message=FALSE, warning=FALSE}
+
+  summary_by_project %>%
+  filter(Donation_amount >= 453.6 )%>%
+  ggplot(aes(x = Donation_amount, y = Donation_No)) +
+  geom_point(alpha = 0.3, col = 'blue')+
+   theme_classic()+
+    xlab("Donation Amount")+
+    ylab("Number of donations")
+
+```
+
+## Plotting data for First Quartile range
+
+```{r message=FALSE, warning=FALSE}
+
+  summary_by_project %>%
+  filter(Donation_amount <= 181.7 )%>%
+  ggplot(aes(x = Donation_amount, y = Donation_No)) +
+  geom_point(alpha = 0.3, col = 'red')+
+   theme_classic()+
+    xlab("Donation Amount")+
+    ylab("Number of donations")
+
+```
+
+## Plotting Data of IQR Range
+
+```{r message=FALSE, warning=FALSE}
+
+  summary_by_project %>%
+  filter(Donation_amount < 453.6 )%>%
+  filter(Donation_amount > 181.7)%>%
+  ggplot(aes(x = Donation_amount, y = Donation_No)) +
+  geom_point(alpha = 0.3)+
+   theme_classic()+
+    xlab("Donation Amount")+
+    ylab("Number of donations")+
+  title("IQR Range In Donation Amount")
+
+```
+
+
+## Identifying top Donors
+
+Summarising Donation data into amount and number of donations and grouping them according to `Donor Id`, to get a view of top donors.
+```{r message=FALSE, warning=FALSE}
+
+summary_by_donor = donations %>%
+  group_by(Donor.ID) %>%
+  summarise(Donation_amount = sum(Donation.Amount, na.rm = T), Donation_No = n())
+
+summary_by_donor_10 = summary_by_donor%>%
+  filter(Donation_No >= 10)%>%
+  mutate(Avg_donation = Donation_amount/Donation_No)
+
+glimpse(summary_by_donor_10)
+
+
+```
+
+
+
+**Ploting Data of Donors with Number of donations Greater than equal to 10.**
+
+Drill and expand to get better view of donations.
+
+```{r message=FALSE, warning=FALSE}
+
+plot_ly(summary_by_donor_10, type = "scatter", mode = 'markers', x = ~Donation_amount, y = ~Donation_No, hoverinfo = 'text', text = ~paste('Donor Id:', Donor.ID,
+                        '<br>Average donations:', Avg_donation))%>%
+  add_markers(opacity = 0.2)%>%
+  layout(title = "Plotting Donation Amount And No of donations with Donor id")
+
+```
+
+### Removing the outliers in top donors
+
+After reviewing the data of top donors we could remove the outliersto have a better view of distribution.
+
+```{r message=FALSE, warning=FALSE}
+
+summary_by_donor_10%>%
+  filter(Avg_donation <= 500)%>%
+  filter(Donation_No <= 2500)%>%
+    ggplot(aes(x = Donation_amount, y = Donation_No)) +
+  geom_point(alpha = 0.3)+
+   theme_classic()+
+    xlab("Donation Amount")+
+    ylab("Number of donations")
+
+```
+
+### Again Drill down to cluttered data
+
+The data is consistent visually and can be treated as a top donor group.
+
+```{r message=FALSE, warning=FALSE}
+
+summary_by_donor_10%>%
+  filter(Donation_amount <= 5000)%>%
+  filter(Donation_No <= 500)%>%
+    ggplot(aes(x = Donation_amount, y = Donation_No)) +
+  geom_point(alpha = 0.3)+
+   theme_classic()+
+    xlab("Donation Amount")+
+    ylab("Number of donations")
+
+```
+
+
+```{r message=FALSE, warning=FALSE}
+
+top_donors = summary_by_donor_10%>%
+  filter(Donation_amount <= 5000)%>%
+  filter(Donation_amount >= 1000)%>%
+  filter(Donation_No <= 100)
+
+summary(top_donors)
+
+```
+
+We will use this subset later to analyse data of donors.
+
+
+# Merging Donors Personal details
+
+We will merge the data of donors with summary of donation amount and number of donations.
+
+```{r message=FALSE, warning=FALSE}
+
+summary_by_donor = left_join(summary_by_donor, donors, by = "Donor.ID")
+
+glimpse(summary_by_donor)
+
+```
+
+## Plotting Data State wise
+
+```{r message=FALSE, warning=FALSE}
+
+Country_donation = summary_by_donor%>%
+  group_by(Donor.State)%>%
+  summarise(amount = sum(Donation_amount))%>%
+  arrange(desc(amount))
+  
+
+
+
+Country_donation[1:10, ]%>%
+  plot_ly(x = ~amount, y = ~Donor.State)%>%
+  add_bars(color = ~Donor.State)%>%
+  layout(title = "Top 10 States", yaxis = list(title = " "), xaxis = list(title = "Donation Amount"), margin = list(l = 100))
+
+```
+
+## Treemap Country Wise Amount distribution
+
+```{r message=FALSE, warning=FALSE}
+
+library(treemap)
+
+treemap(Country_donation, index = c("Donor.State"),
+        vSize = "amount",
+        type = "value",
+        vColor = "amount",
+        title = "Countrywise Ditribution",
+        fontsize.title = 12)
+
+
+```
+
+
+
+# Stay tuned for daily updates
+
