@@ -33,12 +33,36 @@ DonorsChoose.org has funded over 1.1 million classroom requests through the supp
 library(dplyr)
 library(ggplot2)
 library(plotly)
+library(data.table)
+library(tidyverse)
 
-donations = read.csv("Donations.csv", stringsAsFactors = F)
-donors = read.csv("Donors.csv", stringsAsFactors = F)
-projects = read.csv("Projects.csv", stringsAsFactors = F)
+
+donations = read_csv("Donations.csv")
+
+donors = read.csv("Donors.csv")
+
+projects = read_csv("Projects.csv",col_types = cols(
+   X1 = col_integer(),
+  `Project ID` = col_character(),
+  `School ID` = col_character(),
+  `Teacher ID` = col_character(),
+  `Teacher Project Posted Sequence` = col_integer(),
+  `Project Type` = col_character(),
+  `Project Title` = col_character(),
+  `Project Essay` = col_character(),
+  `Project Subject Category Tree` = col_character(),
+  `Project Subject Subcategory Tree` = col_character(),
+  `Project Grade Level Category` = col_character(),
+  `Project Resource Category` = col_character(),
+  `Project Cost` = col_character(),
+  `Project Posted Date` = col_date(format = ""),
+  `Project Current Status` = col_character(),
+  `Project Fully Funded Date` = col_date(format = "")))
+
 resources = read.csv("Resources.csv", stringsAsFactors = F)
+
 schools = read.csv("Schools.csv", stringsAsFactors = F)
+
 teachers = read.csv("Teachers.csv", stringsAsFactors = F)
 
 
@@ -278,7 +302,14 @@ Country_donation = summary_by_donor%>%
   arrange(desc(amount))
   
 
+p = ggplot(Country_donation, aes(x= as.factor(Donor.State), y=amount/1000000, fill=amount/1000000)) +
+    geom_bar(stat='identity') +theme_light() +
+    scale_fill_gradient(low='red', high='white', limits=c(1,41)) +   xlab(" ")+ ylab(" ")+
+    theme(axis.title.y=element_text(angle=0))+
+    theme(axis.text.x = element_text(angle=45, vjust = 1, hjust=1))+
+  labs(fill = " Amount ")
 
+p +coord_polar()
 
 Country_donation[1:10, ]%>%
   plot_ly(x = ~amount, y = ~Donor.State)%>%
@@ -299,6 +330,205 @@ treemap(Country_donation, index = c("Donor.State"),
         vColor = "amount",
         title = "Countrywise Ditribution",
         fontsize.title = 12)
+
+
+```
+
+## Analysis For Top 3 States
+
+We would analyse the data of top three states `California`, `New York` and `Texas`.
+
+### California
+
+```{r message=FALSE, warning=FALSE}
+
+Summary_california = summary_by_donor%>%
+  filter(Donor.State == "California")
+
+Is_teacher = Summary_california %>%
+  group_by(Donor.Is.Teacher)%>%
+  summarise(Donation = sum(Donation_amount))
+
+
+# Is_teacher%>%
+#   ggplot(aes(factor(" "),Donation, fill = factor(Donor.Is.Teacher)))+
+#   geom_bar(width = 1, stat = 'identity')+
+#   coord_polar(theta = 'y')+
+#   xlab(" ")+
+#   ylab(" ")+
+#   labs(fill = "Is Teacher ", title = " Donation Amount distribution ")
+
+
+  
+plot_ly(Is_teacher, labels = ~Donor.Is.Teacher, values = ~Donation, type = 'pie',
+        hoverinfo = 'text', text = ~paste("Is Teacher:", Donor.Is.Teacher)) %>%
+  layout(title = 'Donation Distribution California',
+         xaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
+         yaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE))
+
+
+
+
+```
+
+**California City Wise Distribution Treemap**
+
+```{r message=FALSE, warning=FALSE}
+
+
+Summary_california%>%
+  group_by(Donor.City)%>%
+  summarise(amount = sum(Donation_amount))%>%
+treemap(index = c("Donor.City"),
+        vSize = "amount",
+        type = "index",
+        vColor = "amount",
+        title = "City wise Ditribution",
+        fontsize.title = 12)
+
+```
+
+
+
+### New York
+
+```{r message=FALSE, warning=FALSE}
+
+Summary_NY = summary_by_donor%>%
+  filter(Donor.State == "New York")
+
+Is_teacher = Summary_NY %>%
+  group_by(Donor.Is.Teacher)%>%
+  summarise(Donation = sum(Donation_amount))
+
+plot_ly(Is_teacher, labels = ~Donor.Is.Teacher, values = ~Donation, type = 'pie',
+        hoverinfo = 'text', text = ~paste("Is Teacher:", Donor.Is.Teacher)) %>%
+  layout(title = 'Donation Distribution New York',
+         xaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
+         yaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE))
+
+```
+
+**California City Wise Distribution Treemap**
+
+```{r message=FALSE, warning=FALSE}
+
+
+Summary_NY%>%
+  group_by(Donor.City)%>%
+  summarise(amount = sum(Donation_amount))%>%
+treemap(index = c("Donor.City"),
+        vSize = "amount",
+        type = "index",
+        vColor = "amount",
+        title = "City wise Ditribution",
+        fontsize.title = 12)
+
+```
+
+
+
+
+### Texas
+
+```{r message=FALSE, warning=FALSE}
+
+Summary_Texas = summary_by_donor%>%
+  filter(Donor.State == "Texas")
+
+Is_teacher = Summary_Texas %>%
+  group_by(Donor.Is.Teacher)%>%
+  summarise(Donation = sum(Donation_amount))
+
+plot_ly(Is_teacher, labels = ~Donor.Is.Teacher, values = ~Donation, type = 'pie',
+        hoverinfo = 'text', text = ~paste("Is Teacher:", Donor.Is.Teacher)) %>%
+  layout(title = 'Donation Distribution Texas',
+         xaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
+         yaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE))
+
+```
+
+
+**California City Wise Distribution Treemap**
+
+```{r message=FALSE, warning=FALSE}
+
+
+Summary_Texas%>%
+  group_by(Donor.City)%>%
+  summarise(amount = sum(Donation_amount))%>%
+treemap(index = c("Donor.City"),
+        vSize = "amount",
+        type = "index",
+        vColor = "amount",
+        title = "City wise Ditribution",
+        fontsize.title = 12)
+
+```
+
+# Analysis Of School data
+
+Lets look at the data of schools.
+**School ID** - Unique School Id.
+**School Name** - Name of the school.
+**School Metro Type** - One of four categories describing metro type, or urbanicity, of school area.
+**School Percentage Free Lunch** - Integer describing percentage of students qualifying for free or reduced lunch, obtained from NCES data. For schools without NCES data, a district average is used.
+**School State** - The state of the school that the teacher was teaching at at the time the project was posted.
+**School Zip** - The zip code of the school that the teacher was teaching at at the time the project was posted.
+**School City** - The city of the school that the teacher was teaching at at the time the project was posted.
+**School County** - The county of the school that the teacher was teaching at at the time the project was posted.
+**School District** - The district of the school that the teacher was teaching at at the time the project was posted.
+
+
+
+```{r message=FALSE, warning=FALSE}
+
+State_school = schools%>%
+  group_by(School.State)%>%
+  summarise(No = n())%>%
+  filter(No != 1)
+
+State_school[44, 2] = State_school[44, 2] +1
+
+State_school =  State_school%>%
+  arrange(desc(No))
+
+summary(State_school$No)
+
+
+
+
+```
+
+## Plotting Numbers of School Across different states
+
+```{r message=FALSE, warning=FALSE}
+
+ p = State_school%>%
+   filter(No <= 940)%>%
+ ggplot(aes(x= as.factor(School.State), y=No, fill=No)) +
+    geom_bar(stat='identity') +theme_light() +
+    scale_fill_gradient(low='red', high='white', limits=c(100,7100)) +   xlab(" ")+ ylab(" ")+
+    theme(axis.title.y=element_text(angle=0))+
+    theme(axis.text.x = element_text(angle=45, vjust = 1, hjust=1))+
+  labs(fill = " Number Of Schools ")
+
+p + coord_polar()+ aes(x=reorder(School.State, No)) +
+   theme(axis.text.x = element_text(angle=-20))
+
+ p = State_school%>%
+   filter(No > 940)%>%
+ ggplot(aes(x= as.factor(School.State), y=No)) +
+    geom_bar(stat='identity') +theme_light() +
+    scale_fill_gradient(low='red', high='white', limits=c(100,7100)) +   xlab(" ")+ ylab(" ")+
+    theme(axis.title.y=element_text(angle=0))+
+    theme(axis.text.x = element_text(angle=45, vjust = 1, hjust=1))+
+  labs(fill = " Number Of Schools ")
+
+p + coord_polar() + aes(x=reorder(School.State, No)) +
+   theme(axis.text.x = element_text(angle=-20))
+
+
 
 
 ```
