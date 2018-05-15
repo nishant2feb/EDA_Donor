@@ -534,6 +534,34 @@ p + coord_polar() + aes(x=reorder(School.State, No)) +
 ```
 
 
+```{r message=FALSE, warning=FALSE}
+
+Summary_project_school = projects%>%
+  group_by(`School ID`)%>%
+  summarise(No_of_Project = n())
+
+Summary_project_school = Summary_project_school[1:11847, ]
+
+Summary_project_school%>%
+  filter(No_of_Project<=6)%>%
+ggplot(aes(x = No_of_Project))+
+  geom_histogram(bins = 6, fill = 'blue')+
+  theme_classic()+
+  xlab("Number of projects")+
+  ylab("Count")
+
+Summary_project_school%>%
+  filter(No_of_Project>6)%>%
+ggplot(aes(x = No_of_Project))+
+  geom_histogram(bins = 30, fill = 'blue')+
+xlim(6, 1000)+
+  theme_classic()+
+  xlab("Number of projects")+
+  ylab("Count")
+
+```
+
+
 
 # Stay tuned for daily updates
 
