@@ -42,7 +42,6 @@ donations = read_csv("Donations.csv")
 donors = read.csv("Donors.csv")
 
 projects = read_csv("Projects.csv",col_types = cols(
-   X1 = col_integer(),
   `Project ID` = col_character(),
   `School ID` = col_character(),
   `Teacher ID` = col_character(),
@@ -534,13 +533,36 @@ p + coord_polar() + aes(x=reorder(School.State, No)) +
 ```
 
 
+# Analysis Of School data
+
+Lets analyse project data.
+
+"Project ID"                       
+"School ID"                       
+"Teacher ID"                       
+"Teacher Project Posted Sequence" 
+"Project Type"                     
+"Project Title"                   
+"Project Essay"                    
+"Project Short Description"       
+"Project Need Statement"           
+"Project Subject Category Tree"   
+"Project Subject Subcategory Tree" 
+"Project Grade Level Category"    
+"Project Resource Category"        
+"Project Cost"                    
+"Project Posted Date"              
+"Project Expiration Date"         
+"Project Current Status"           
+"Project Fully Funded Date"
+
 ```{r message=FALSE, warning=FALSE}
 
 Summary_project_school = projects%>%
   group_by(`School ID`)%>%
   summarise(No_of_Project = n())
 
-Summary_project_school = Summary_project_school[1:11847, ]
+
 
 Summary_project_school%>%
   filter(No_of_Project<=6)%>%
@@ -553,7 +575,7 @@ ggplot(aes(x = No_of_Project))+
 Summary_project_school%>%
   filter(No_of_Project>6)%>%
 ggplot(aes(x = No_of_Project))+
-  geom_histogram(bins = 30, fill = 'blue')+
+  geom_histogram(bins = 40, fill = 'blue')+
 xlim(6, 1000)+
   theme_classic()+
   xlab("Number of projects")+
@@ -561,7 +583,12 @@ xlim(6, 1000)+
 
 ```
 
+## Top schools having Exceptional Number of projects
 
+```{r message=FALSE, warning=FALSE}
+
+```
+ 
 
 # Stay tuned for daily updates
 
